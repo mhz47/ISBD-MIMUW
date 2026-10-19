@@ -1,6 +1,5 @@
 use std::env;
 use std::fs::File;
-use std::os::unix::fs::FileExt;
 
 mod hash;
 use hash::sum_block_hash;
@@ -10,46 +9,54 @@ const BLOCK_SIZE: u64 = 512;
 fn main() {
 
     let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        println!("Usage: cargo run --release --bin latency filepath");
+    let (filepath, block_size) = if args.len() >= 3 {
+        let m = args[2].parse::<u64>().unwrap_or(BLOCK_SIZE);
+        (args[1].clone(), m)
+    } else if args.len() == 2 {
+        (args[1].clone(), BLOCK_SIZE)
+    } else {
+        println!("Usage: cargo run --release --bin throughput <ścieżka> [rozmiar_bloku]");
         return;
-    }
+    };
 
-    let file_res = File::open(args[1].clone());
+    let file_res = File::open(&filepath);
     if file_res.is_err() {
-        eprintln!("File not found: {}", args[1]);
+        eprintln!("File not found: {}", filepath);
         return;
     }
     let file = file_res.unwrap();
 
     let metadata = file.metadata();
     if metadata.is_err() {
-        eprintln!("Error opening file: {}", args[1]);
+        eprintln!("Error opening file: {}", filepath);
         return;
     }
     let total_size = metadata.unwrap().len();
-    let num_blocks = (total_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    let mut buffer = vec![0u8; BLOCK_SIZE as usize];
     let mut result = vec![0u8; 16];
-    for block_idx in 0..num_blocks
-    {
-        let offset = block_idx * BLOCK_SIZE;
-        let bytes_to_read = std::cmp::min(BLOCK_SIZE, total_size - offset) as usize;
+    let start_total = std::time::Instant::now();
+    if total_size > 0 {
+        // Mapowanie pliku bezpośrednio do przestrzeni adresowej procesu za pomocą wywołania systemowego mmap(2).
+        // Blok unsafe jest wymagany przez bibliotekę memmap2, gdyż niespójność danych z zewnętrznej modyfikacji
+        // pliku podczas działania programu mogłaby prowadzić do niezdefiniowanego zachowania (Undefined Behavior).
+        let mmap = unsafe { memmap2::Mmap::map(&file).unwrap() };
+        let num_blocks = (total_size + block_size - 1) / block_size;
 
-        // read
-        let target_buf = &mut buffer[..bytes_to_read];
-        let err = file.read_exact_at(target_buf, offset);
-        if err.is_err() {
-            eprintln!("Error reading file: {}", err.unwrap_err());
-            return;
+        for block_idx in 0..num_blocks {
+            let offset = (block_idx * block_size) as usize;
+            let end = std::cmp::min(offset + block_size as usize, total_size as usize);
+            let target_buf = &mmap[offset..end];
+
+            // compute
+            let block_hash = md5::compute(target_buf);
+            sum_block_hash(&mut result, &block_hash);
         }
-
-        // compute
-        let block_hash = md5::compute(target_buf);
-        sum_block_hash(&mut result, &block_hash);
     }
-    print!("{} 0x", args[1].clone());
+
+    let elapsed_total = start_total.elapsed();
+    eprintln!("czas_całk_s: {:.6}", elapsed_total.as_secs_f64());
+
+    print!("{} 0x", filepath);
     for byte in &result {
         print!("{:02x}", byte);
     }

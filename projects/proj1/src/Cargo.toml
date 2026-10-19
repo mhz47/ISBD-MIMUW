@@ -15,6 +15,19 @@ path = "throughput.rs"
 name = "pipeline"
 path = "pipeline.rs"
 
+[[bin]]
+name = "latency_original"
+path = "latency_original.rs"
+
+[[bin]]
+name = "throughput_original"
+path = "throughput_original.rs"
+
+[[bin]]
+name = "pipeline_original"
+path = "pipeline_original.rs"
+
 [dependencies]
 md5 = "0.8.1"
 rand = "0.10.3"
+memmap2 = "0.9"
