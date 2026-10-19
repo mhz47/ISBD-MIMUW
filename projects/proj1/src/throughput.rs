@@ -36,9 +36,6 @@ fn main() {
     let mut result = vec![0u8; 16];
     let start_total = std::time::Instant::now();
     if total_size > 0 {
-        // Mapowanie pliku bezpośrednio do przestrzeni adresowej procesu za pomocą wywołania systemowego mmap(2).
-        // Blok unsafe jest wymagany przez bibliotekę memmap2, gdyż niespójność danych z zewnętrznej modyfikacji
-        // pliku podczas działania programu mogłaby prowadzić do niezdefiniowanego zachowania (Undefined Behavior).
         let mmap = unsafe { memmap2::Mmap::map(&file).unwrap() };
         let num_blocks = (total_size + block_size - 1) / block_size;
 

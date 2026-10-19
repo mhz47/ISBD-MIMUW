@@ -1,6 +1,6 @@
 # Sprawozdanie z Laboratorium 1: Pomiary podstawowych wielkości przy odczytach plików
 
-[Imię i Nazwisko / Nr indeksu]
+Marta Hering-Zagrocka, 448297
 
 ## 1. Środowisko sprzętowe
 
