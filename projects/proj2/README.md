@@ -107,10 +107,7 @@ Dla kolumn INT64 zastosowano trójetapową kompresję na poziomie page'a:
 1. **Delta encoding**: zamiast przechowywać wartości $v_0, v_1, \dots, v_n$, przechowuje się różnice $\Delta_i = v_i - v_{i-1}$ (dla $i=0$: $\Delta_0 = v_0$). Dla danych posortowanych lub wolno rosnących (np. identyfikatory, timestampy) delty są małe. Delta jest resetowana na początku każdego page'a - pierwszy wiersz przechowuje pełną wartość, co gwarantuje niezależność page'ów.
 
 
-2. **ZigZag encoding**: mapuje liczby ze znakiem na bezznakowe:
-
-    $0\!\to\!0,\ -1\!\to\!1,\ 1\!\to\!2,\ -2\!\to\!3,\ 2\!\to\!4,\ \dots$ 
-    
+2. **ZigZag encoding**: mapuje liczby ze znakiem na bezznakowe.
     Wzór: $(x \ll 1) \oplus (x \gg 63)$. Pozwala to kodować małe liczby ujemne tak samo krótko jak małe dodatnie.
 
 
@@ -177,11 +174,21 @@ Serializator najpierw zapisuje dane do pliku tymczasowego (`.tmp`), a dopiero po
 
 Program `isbd-viewer` oblicza metryki dla każdego typu kolumny:
 
-| Typ kolumny | Metryka | Wzór |
-|-------------|---------|------|
-| **INT64** | Średnia arytmetyczna | $\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i$ |
-| **BOOLEAN** | Entropia binarna | $H(p) = -p \cdot \log_2(p) - (1-p) \cdot \log_2(1-p)$, gdzie $p$ to ułamek wartości `true` |
-| **VARCHAR** | Liczba znaków ASCII | $\sum_{i=1}^{n} \text{ascii_chars}(s_i)$, liczba znaków ASCII we wszystkich napisach |
+**INT64 - Średnia arytmetyczna**
+
+$$\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i$$
+
+**BOOLEAN - Entropia binarna**
+
+$$H(p) = -p \cdot \log_2(p) - (1-p) \cdot \log_2(1-p)$$
+
+gdzie $p$ to ułamek wartości `true`.
+
+**VARCHAR - Liczba znaków ASCII**
+
+$$\sum_{i=1}^{n} \text{chars}(s_i)$$
+
+Liczba znaków ASCII we wszystkich napisach.
 
 
 
