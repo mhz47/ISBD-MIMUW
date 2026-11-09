@@ -1,0 +1,28 @@
+[package]
+name = "isbd-dbms"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+zstd = "0.13"
+
+[lib]
+name = "isbd_dbms"
+path = "src/lib.rs"
+
+[[bin]]
+name = "isbd-viewer"
+path = "apps/viewer.rs"
+
+[[bin]]
+name = "isbd-generator"
+path = "apps/generator.rs"
+
+[[test]]
+name = "unit"
+path = "tests/unit/mod.rs"
+
+[[test]]
+name = "integration"
+path = "tests/integration/mod.rs"
